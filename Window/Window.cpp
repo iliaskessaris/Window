@@ -10,6 +10,7 @@
 using namespace std;
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+void CreateMenu(HWND hwnd);
 
 //The basic function of a window program, like the main() function for console applications.
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow)
@@ -31,14 +32,14 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	HWND hwnd = CreateWindowEx(
 		0,                              // Optional window styles.
 		CLASS_NAME,                     // Window class
-		L"Μάθε να προγραμματίζεις παράθυρα",    // Window title
+		L"Προγραμματισμός παραθύρων",    // Window title
 		WS_OVERLAPPEDWINDOW,            // Window style is an overlapped window.
 		
 		// Size and position
 		500,							//Default values for size and location appear below.
 		500,							//CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+		600,
 		400,
-		200,
 		
 
 		NULL,       // Parent window    
@@ -55,6 +56,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 
 	// Displays the window with handler hwmd, according to nCmdShow.
 	ShowWindow(hwnd, nCmdShow);
+	UpdateWindow(hwnd);
 	
 	// The loop checks messages. Every message is related to an event and stored in a queue maintained by the OS. 
 	MSG msg = {};							//Createς a variable that will be used to store a message.
@@ -72,21 +74,51 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg)           //Checks the identifier of the message that came from the queue.
 	{
-	case WM_DESTROY:
+	case WM_CREATE: { //Here we add everything we want to appear in our window.
+		CreateMenu(hwnd);
+		//Add a text box with text "ΑΡΧΙΚΗ ΤΙΜΗ" that can be modified.
+		CreateWindowEx(0, TEXT("EDIT"), TEXT("ΑΡΧΙΚΗ ΤΙΜΗ"), WS_VISIBLE | WS_CHILD | WS_BORDER, 10, 10, 200 , 20, hwnd, (HMENU)NULL, NULL, NULL);
+		//Add a button.
+		CreateWindowEx(0, TEXT("BUTTON"), TEXT("Εντάξει"), WS_VISIBLE | WS_CHILD | WS_BORDER, 10, 40, 80, 28, hwnd, (HMENU)NULL, NULL, NULL);
+		
+		CreateWindowEx(0, TEXT("STATIC"), TEXT("Τι γίνεται;"), WS_VISIBLE | WS_CHILD, 10, 80, 80, 28, hwnd, (HMENU)NULL, NULL, NULL);
+		return 0;
+	}
+	case WM_DESTROY:   //Sent when a window is being destroyed. It destroys also the child windows.
 		PostQuitMessage(0);  //Breaks the while loop of the previous function.
 		return 0;
 
 	case WM_PAINT:
 	{
 		PAINTSTRUCT ps;
-		HDC hdc = BeginPaint(hwnd, &ps);
+		HDC hdc = BeginPaint(hwnd, &ps); //Prepares the window with hwnd handler for painting and fills the ps structure with the appropriate data. 
 
-		FillRect(hdc, &ps.rcPaint, (HBRUSH)(COLOR_WINDOW + 1));
+		FillRect(hdc, &ps.rcPaint, (HBRUSH)(COLOR_WINDOW + 1)); //The FillRect function fills a rectangle by using the specified brush. This function includes the left and top borders.
 
-		EndPaint(hwnd, &ps);
+		EndPaint(hwnd, &ps); //Marks the end of painting in the specified window.
 	}
 	return 0;
 
 	}
 	return DefWindowProc(hwnd, uMsg, wParam, lParam);
+}
+
+//Creates the menu of the window "Μάθε να προγραμματίζεις παράθυρα".
+void CreateMenu(HWND hwnd) {
+	HMENU hMenubar = CreateMenu();
+	HMENU hFile = CreateMenu();
+	HMENU hOptions = CreateMenu();
+
+	AppendMenu(hMenubar, MF_POPUP, (UINT_PTR)hFile, L"Αρχείο");
+	AppendMenu(hFile, MF_STRING, NULL, L"Έξοδος");
+
+	AppendMenu(hMenubar, MF_POPUP, NULL, L"Επεξεργασία");
+
+	AppendMenu(hMenubar, MF_POPUP, (UINT_PTR)hOptions, L"Επιλογές");
+	AppendMenu(hOptions, MF_STRING, NULL, L"Επιλογή 1");
+
+	AppendMenu(hOptions, MF_STRING, NULL, L"Επιλογή 2");
+	
+
+	SetMenu(hwnd, hMenubar);
 }
