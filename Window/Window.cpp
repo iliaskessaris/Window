@@ -2,11 +2,9 @@
 #define UNICODE
 #endif 
 
-#include <iostream>
+
 #include <windows.h>
-#include <stdlib.h>
-#include <string.h>
-#include <tchar.h>
+#include <fstream>
 using namespace std;
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -68,6 +66,12 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	return 0;
 }
 
+#define ID_INFO 1
+#define ID_EDIT 2
+#define ID_OK 3
+#define ID_CHOICE_ONE 4
+#define ID_EXIT 5
+static HWND hwndTextBox; 
 /*All the parameters are part of the message retrieved from the queue. Depending o the event stored in the last
 message retrieved from the queue performs various aperations. */
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -77,11 +81,43 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_CREATE: { //Here we add everything we want to appear in our window.
 		CreateMenu(hwnd);
 		//Add a text box with text "ΑΡΧΙΚΗ ΤΙΜΗ" that can be modified.
-		CreateWindowEx(0, TEXT("EDIT"), TEXT("ΑΡΧΙΚΗ ΤΙΜΗ"), WS_VISIBLE | WS_CHILD | WS_BORDER, 10, 10, 200 , 20, hwnd, (HMENU)NULL, NULL, NULL);
+		hwndTextBox=CreateWindowEx(0, TEXT("EDIT"), TEXT("ΑΡΧΙΚΗ ΤΙΜΗ"), WS_VISIBLE | WS_CHILD | WS_BORDER | ES_AUTOHSCROLL | ES_AUTOVSCROLL | ES_MULTILINE | WS_VSCROLL, 10, 10, 200 , 20, hwnd, (HMENU)ID_EDIT, NULL, NULL);
 		//Add a button.
-		CreateWindowEx(0, TEXT("BUTTON"), TEXT("Εντάξει"), WS_VISIBLE | WS_CHILD | WS_BORDER, 10, 40, 80, 28, hwnd, (HMENU)NULL, NULL, NULL);
-		
+		CreateWindowEx(0, TEXT("BUTTON"), TEXT("Εντάξει"), WS_VISIBLE | WS_CHILD | WS_BORDER, 10, 40, 80, 28, hwnd, (HMENU)ID_OK, NULL, NULL);
+		//Show a particular phrase in the initial window.
 		CreateWindowEx(0, TEXT("STATIC"), TEXT("Τι γίνεται;"), WS_VISIBLE | WS_CHILD, 10, 80, 80, 28, hwnd, (HMENU)NULL, NULL, NULL);
+		//Create action button.
+		CreateWindowEx(0, TEXT("BUTTON"), TEXT("Πληροφορίες"), WS_VISIBLE | WS_CHILD | WS_BORDER, 100, 40, 100, 28, hwnd, (HMENU)ID_INFO, NULL, NULL);
+		return 0;
+	}
+	
+	//Includes the commands that will be executed when we press the various buttons of the windows.
+	case WM_COMMAND: { 
+		//Commands will be executed if we press the button "Πληροφορίες".
+		if (LOWORD(wParam) == ID_INFO) {
+
+			MessageBox(hwnd,L"Έκδοση 1.0",L"Πληροφορίες", MB_ICONINFORMATION);
+		}
+
+		if (LOWORD(wParam) == ID_OK) {
+			int len = GetWindowTextLength(hwndTextBox)+1;
+			LPTSTR title = new TCHAR[100];
+			GetWindowText(hwndTextBox, title, len);
+			SetWindowText(hwnd, title);
+			ofstream windowsfile("WindowsFile.txt");
+			/*windowsfile << title;
+			windowsfile.close();*/
+			 // MessageBox(hwnd, title,L"Εντάξει", MB_OK);
+			delete[] title;
+		}
+		//Dispalays a message box when you choose Επιλογή 1.
+		if (LOWORD(wParam) == ID_CHOICE_ONE) {
+			MessageBox(hwnd, L"Επέλεξες την επιλογή 1", L"Επιλογή 1", MB_OK);
+		}
+		//Closes the initial windows pressing exit.
+		if (LOWORD(wParam) == ID_EXIT) {
+			PostQuitMessage(0);
+		}
 		return 0;
 	}
 	case WM_DESTROY:   //Sent when a window is being destroyed. It destroys also the child windows.
@@ -110,15 +146,15 @@ void CreateMenu(HWND hwnd) {
 	HMENU hOptions = CreateMenu();
 
 	AppendMenu(hMenubar, MF_POPUP, (UINT_PTR)hFile, L"Αρχείο");
-	AppendMenu(hFile, MF_STRING, NULL, L"Έξοδος");
+	AppendMenu(hFile, MF_STRING, ID_EXIT, L"Έξοδος");
 
 	AppendMenu(hMenubar, MF_POPUP, NULL, L"Επεξεργασία");
 
 	AppendMenu(hMenubar, MF_POPUP, (UINT_PTR)hOptions, L"Επιλογές");
-	AppendMenu(hOptions, MF_STRING, NULL, L"Επιλογή 1");
+	AppendMenu(hOptions, MF_STRING, ID_CHOICE_ONE, L"Επιλογή 1");
 
 	AppendMenu(hOptions, MF_STRING, NULL, L"Επιλογή 2");
 	
-
+	//It is nesseccary for the menu to appear.
 	SetMenu(hwnd, hMenubar);
 }
